@@ -1,0 +1,11 @@
+2021-04-02 18:04:07,152 INFO MonitoringLogger - Product Index Visible
+2021-04-02 18:04:13,047 INFO MonitoringLogger - Product Index Visible
+2021-04-02 18:04:14,773 INFO MonitoringLogger - Product Index Visible
+2021-04-02 18:04:16,865 INFO MonitoringLogger - Product Index Visible
+2021-04-02 18:04:33,113 INFO MonitoringLogger - Product Index Visible
+2021-04-02 18:04:45,979 INFO MonitoringLogger - Product Index Visible
+2021-04-02 18:04:48,230 INFO MonitoringLogger - Product Index Visible
+2021-04-02 18:18:10,631 INFO MonitoringLogger - Product Index Visible
+2021-04-02 18:18:14,605 ERROR MonitoringLogger - Exception of type 'System.Exception' was thrown.
+2021-04-02 18:25:53,998 INFO MonitoringLogger - Product Index Visible
+2021-04-02 18:25:56,839 ERROR MonitoringLogger - Exception of type 'System.Exception' was thrown.
