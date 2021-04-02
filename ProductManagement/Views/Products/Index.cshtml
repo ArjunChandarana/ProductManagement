@@ -8,70 +8,137 @@
 <h2>Index</h2>
 
 <p>
-    @Html.ActionLink("Create New", "Create")
-</p>
-@using (Html.BeginForm()) { 
-    <table class="table">
-        
-        <tr>
-            <th>
-                @Html.ActionLink("Category Name", "Index",
-               new { sortOrder = "Name", CurrentSort = ViewBag.CurrentSort })
-            </th>
-            <th>
-                @Html.ActionLink("Name", "Index",
-               new { sortOrder = "Category", CurrentSort = ViewBag.CurrentSort })
-            </th>
-            <th>
-                Price
-            </th>
+    @if (User.Identity.IsAuthenticated)
+    {
+        @Html.ActionLink("Create New", "Create")}
+    </p>
+<table class="table">
+    @using (Html.BeginForm())
+    {
 
-            <th>
-                Short Description
-            </th>
+        <p>
+            Search Name: @Html.TextBox("Search_Data", ViewBag.FilterValue as string)
+            <input type="submit" value="Find" />
+        </p>
+    }
 
-            <th>
-                Small Image
-            </th>
 
-            <th></th>
-        </tr>
+    @using (Html.BeginForm("MultipleDelete", "Products", FormMethod.Post))
 
-        @foreach (var item in Model)
+    {if (User.Identity.IsAuthenticated)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Category.CategoryName)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Name)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Price)
-                </td>
-
-                <td>
-                    @Html.DisplayFor(modelItem => item.ShortDescription)
-                </td>
-
-                <td>
-                    <img src="@Url.Content(item.Smallimage)" alt="no image" class="img-responsive image">
-                </td>
-
-                <td>
-                    @Html.ActionLink("Edit", "Edit", new { id = item.ProductId }) |
-                    @Html.ActionLink("Details", "Details", new { id = item.ProductId }) |
-                    @Html.ActionLink("Delete", "Delete", new { id = item.ProductId })
-                </td>
-            </tr>
+            <button type="submit" value="Delete" class="btn btn-sm btn-danger rounded-0" onclick="return confirm('Are you sure?')"><i class="fa fa-trash-o"></i> Delete</button>
         }
+<tr>
+    @if (User.Identity.IsAuthenticated)
+    {
+        <th><input type="checkbox" id="checkBoxAll" class="custom-checkbox" /></th>
+    }
+        
+        <th>  @Html.ActionLink("Category", "Index", new { Sorting_Order = ViewBag.SortingName, Filter_Value = ViewBag.FilterValue })     </th>
 
-    </table>
-<div id='Paging' style="text-align:center">
-    Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber)
-    of @Model.PageCount
+        <th>
+            @Html.ActionLink("Name", "Index", new { Sorting_Order = ViewBag.SortingName, Filter_Value = ViewBag.FilterValue })
+        </th>
+        <th>
+            Price
+        </th>
 
-    @Html.PagedListPager(Model, page => Url.Action("Index", new { page }))
-</div>
-}
+        <th>
+            Short Description
+        </th>
 
+        <th>
+            Small Image
+        </th>
+
+        <th></th>
+    </tr>
+
+            foreach (var item in Model)
+            {
+<tr>
+    @if (User.Identity.IsAuthenticated)
+    {
+        <td><input type="checkbox" name="ids" value="@item.ProductId" class="custom-checkbox chkCheckBoxId" /></td>
+        }
+        <td>
+            @Html.DisplayFor(modelItem => item.Category.CategoryName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Name)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Price)
+        </td>
+
+        <td>
+            @Html.DisplayFor(modelItem => item.ShortDescription)
+        </td>
+
+        <td>
+            <img src="@Url.Content(item.Smallimage)" style="max-height:150px;" alt="no image" class="img-responsive image">
+        </td>
+
+        <td>
+            @if (User.Identity.IsAuthenticated)
+            {
+                @Html.ActionLink("Edit", "Edit", new { id = item.ProductId }) 
+                @Html.ActionLink("Details", "Details", new { id = item.ProductId })  
+                @Html.ActionLink("Delete", "Delete", new { id = item.ProductId })
+            }
+        </td>
+    </tr>
+            }
+        }
+</table>
+<br />
+
+    Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+    @Html.PagedListPager(Model, Page_No => Url.Action("Index",
+        new { Page_No, Sorting_Order = ViewBag.CurrentSortOrder, Filter_Value = ViewBag.FilterValue }))
+
+    @section scripts{
+
+        <script>
+
+            $(document).ready(function () {
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "onclick": null,
+            "showDuration": "200",
+            "hideDuration": "1500",
+            "timeOut": "6000",
+            "extendedTimeOut": "1200",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+    
+        var Type = "@TempData["Type"]";
+        var Message = "@TempData["Message"]";
+        if (Type == "0") {
+            toastr.success(Message,'')
+        } else if (Type == "1") {
+            toastr.info(Message, '')
+        } else if (Type == "2") {
+            toastr.warning(Message, '')
+        } else if (Type == "3") {
+            toastr.error(Message, 'Inconceivable!')
+        }
+    });
+
+            $(document).ready(function () {
+                $('#checkBoxAll').click(function () {
+                    if ($(this).is(":checked")) {
+                        $(".chkCheckBoxId").prop("checked", true)
+                    }
+                    else {
+                        $(".chkCheckBoxId").prop("checked", false)
+                    }
+                });
+            });
+        </script>
+    }

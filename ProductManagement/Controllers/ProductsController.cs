@@ -15,47 +15,72 @@ namespace ProductManagement.Controllers
     public class ProductsController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
+     
 
         // GET: Products
-        public ActionResult Index(string sortOrder, string CurrentSort, int? page)
+        public ActionResult Index(string Sorting_Order, string Search_Data, string Filter_Value, int? Page_No)
         {
             /*var products = db.Products.Include(p => p.Category);
             return View(products.ToList());*/
 
-          
-            int pageSize = 10;
-            int pageIndex = 1;
-            pageIndex = page.HasValue ? Convert.ToInt32(page) : 1;
-            ViewBag.CurrentSort = sortOrder;
-            sortOrder = String.IsNullOrEmpty(sortOrder) ? "Name" : sortOrder;
-            IPagedList<Product> products = null;
-            switch (sortOrder)
+            var products = db.Products.Include(p => p.Category);
+            if (Search_Data != null)
+            {
+                Page_No = 1;
+            }
+            else
+            {
+                Search_Data = Filter_Value;
+            }
+
+            ViewBag.FilterValue = Search_Data;
+            if (!String.IsNullOrEmpty(Search_Data))
+
+            {
+                products = products.Where(p => p.Name.ToUpper().Contains(Search_Data.ToUpper())
+                    || p.Category.CategoryName.ToUpper().Contains(Search_Data.ToUpper()));
+            }
+            ViewBag.CurrentSortOrder = Sorting_Order;
+            ViewBag.SortingName = String.IsNullOrEmpty(Sorting_Order) ? "Name" : "";
+            ViewBag.SortingDate = Sorting_Order == "Date_Enroll" ? "Category_dec" : "Category";
+           
+            switch (Sorting_Order)
             {
                 case "Name":
-                    if (sortOrder.Equals(CurrentSort))
-                        products = db.Products.OrderByDescending
-                                (m => m.Name).ToPagedList(pageIndex, pageSize);
-                    else
-                        products = db.Products.OrderBy
-                                (m => m.Name).ToPagedList(pageIndex, pageSize);
+                    products = products.OrderByDescending(p => p.Name);
                     break;
                 case "Category":
-                    if (sortOrder.Equals(CurrentSort))
-                        products = db.Products.OrderByDescending
-                                (m => m.Category.CategoryName).ToPagedList(pageIndex, pageSize);
-                    else
-                        products = db.Products.OrderBy
-                                (m => m.Category.CategoryName).ToPagedList(pageIndex, pageSize);
+                    products = products.OrderBy(p => p.Category.CategoryName);
                     break;
-               
-                case "Default":
-                    products = db.Products.OrderBy
-                        (m => m.Name).ToPagedList(pageIndex, pageSize);
+                case "Category_dec":
+                    products = products.OrderByDescending(p => p.Category.CategoryName);
+                    break;
+                default:
+                    products = products.OrderBy(p => p.Name);
                     break;
             }
-            return View(products);
+            int Size_Of_Page = 4;
+            int No_Of_Page = (Page_No ?? 1);
+            return View(products.ToPagedList(No_Of_Page, Size_Of_Page));
+
+            
+
+           /* return View(products);*/
 
 
+        }
+        [Authorize]
+        public ActionResult MultipleDelete(int[] ids)
+        {
+            foreach (int id in ids)
+            {
+                var product = this.db.Products.Find(id);
+                this.db.Products.Remove(product);
+                this.db.SaveChanges();
+            }
+            TempData["Type"] = 0;
+            TempData["Message"] = "Products Deleted Successfully";
+            return RedirectToAction("Index");
         }
 
         // GET: Products/Details/5
@@ -63,7 +88,7 @@ namespace ProductManagement.Controllers
         {
             if (id == null)
             {
-                return HttpNotFound();
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             Product product = db.Products.Find(id);
             if (product == null)
@@ -74,6 +99,7 @@ namespace ProductManagement.Controllers
         }
 
         // GET: Products/Create
+        [Authorize]
         public ActionResult Create()
         {
             ViewBag.CategoryId = new SelectList(db.Categories, "CategoryId", "CategoryName");
@@ -84,7 +110,8 @@ namespace ProductManagement.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        //[ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken]
+        [Authorize]
         public ActionResult Create(Product product)
         {
             if (ModelState.IsValid)
@@ -120,6 +147,8 @@ namespace ProductManagement.Controllers
 
                 db.Products.Add(product);
                 db.SaveChanges();
+                TempData["Type"] = 0;
+                TempData["Message"] = "Product Added Successfully";
                 return RedirectToAction("Index");
             }
 
@@ -132,7 +161,7 @@ namespace ProductManagement.Controllers
         {
             if (id == null)
             {
-                return HttpNotFound();
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             Product product = db.Products.Find(id);
             if (product == null)
@@ -140,6 +169,8 @@ namespace ProductManagement.Controllers
                 return HttpNotFound();
             }
             ViewBag.CategoryId = new SelectList(db.Categories, "CategoryId", "CategoryName", product.CategoryId);
+            TempData["Type"] = 0;
+            TempData["Message"] = "Product edited Successfully";
             return View(product);
         }
 
@@ -148,6 +179,7 @@ namespace ProductManagement.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public ActionResult Edit(Product product)
         {
             if (ModelState.IsValid)
@@ -198,6 +230,8 @@ namespace ProductManagement.Controllers
 
                 db.Entry(product).State = EntityState.Modified;
                 db.SaveChanges();
+                TempData["Type"] = 0;
+                TempData["Message"] = "Product edited Successfully";
                 return RedirectToAction("Index");
             }
             ViewBag.CategoryId = new SelectList(db.Categories, "CategoryId", "CategoryName", product.CategoryId);
@@ -209,7 +243,7 @@ namespace ProductManagement.Controllers
         {
             if (id == null)
             {
-                return HttpNotFound();
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             Product product = db.Products.Find(id);
             if (product == null)
@@ -220,6 +254,7 @@ namespace ProductManagement.Controllers
         }
 
         // POST: Products/Delete/5
+        [Authorize]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
